@@ -10,7 +10,6 @@ PACKAGES=(
     "git"
     "curl"
     "nodejs"
-    "npm"
     "kitty"
 )
 
