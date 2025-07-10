@@ -14,6 +14,12 @@ PACKAGES=(
     "kitty"
 )
 
+# OS-specific packages
+DEBIAN_PACKAGES=(
+    "libdbus-1-dev"
+)
+ARCH_PACKAGES=()
+
 # --- Script Start ---
 echo "Starting dotfiles setup..."
 
@@ -25,21 +31,33 @@ install_packages() {
     # Check for Arch Linux (pacman)
     if command -v pacman &> /dev/null; then
         echo "Detected Arch Linux."
-        
+        local all_packages=("${PACKAGES[@]}" "${ARCH_PACKAGES[@]}")
         # Check for yay, otherwise use pacman
         if command -v yay &> /dev/null;
         then
             echo "Using 'yay' to install packages."
-            yay -Syu --noconfirm "${PACKAGES[@]}"
+            yay -Syu --noconfirm "${all_packages[@]}"
         else
             echo "Using 'pacman' to install packages. You may be prompted for your password."
-            sudo pacman -Syu --noconfirm "${PACKAGES[@]}"
+            sudo pacman -Syu --noconfirm "${all_packages[@]}"
         fi
     # Check for Debian/Ubuntu (apt-get)
     elif command -v apt-get &> /dev/null; then
         echo "Detected Debian/Ubuntu."
         echo "You may be prompted for your password."
-        sudo apt-get update && sudo apt-get install -y "${PACKAGES[@]}"
+
+        # Ensure curl is installed for NodeSource script
+        if ! command -v curl &> /dev/null; then
+            echo "Installing curl, needed for Node.js setup."
+            sudo apt-get update
+            sudo apt-get install -y curl
+        fi
+
+        echo "Adding NodeSource repository for latest Node.js/npm..."
+        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+        
+        local all_packages=("${PACKAGES[@]}" "${DEBIAN_PACKAGES[@]}")
+        sudo apt-get update && sudo apt-get install -y "${all_packages[@]}"
     else
         echo "WARNING: Could not detect package manager. Please install packages manually:"
         echo "${PACKAGES[@]}"
@@ -95,6 +113,8 @@ link_files() {
         if [ -e "$target" ] || [ -L "$target" ]; then
             echo "-> Backing up existing $target to $BACKUP_DIR"
             mv "$target" "$BACKUP_DIR/"
+            # Explicitly remove the target after backing up to ensure a clean slate for symlink
+            rm -rf "$target"
         fi
 
         echo "-> Linking $source to $target"
