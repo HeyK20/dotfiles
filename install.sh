@@ -1,49 +1,94 @@
 #!/bin/bash
 set -e # Exit immediately if a command exits with a non-zero status.
 
-# Directory where this script is located
-DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-BACKUP_DIR=~/dotfiles_backup_$(date +%Y%m%d_%H%M%S)
+# --- Configuration ---
+# Add packages you want to install here
+PACKAGES=(
+    "neovim"
+    "fzf"
+    "zsh"
+    "git"
+)
 
-echo "Dotfiles installation script"
-echo "============================"
-echo "Your existing dotfiles will be backed up to: $BACKUP_DIR"
-mkdir -p "$BACKUP_DIR"
+# --- Script Start ---
+echo "Starting dotfiles setup..."
 
-# Function to create a symlink, backing up the original if it exists
-# Arguments:
-#   $1: source file/dir in the dotfiles repo (e.g., nvim)
-#   $2: target path in the home directory (e.g., .config/nvim)
-link_file() {
-    local source="$DOTFILES_DIR/$1"
-    local target="$HOME/$2"
-
-    # If the target's directory doesn't exist, create it
-    if [ ! -d "$(dirname "$target")" ]; then
-        echo "-> Creating directory $(dirname "$target")"
-        mkdir -p "$(dirname "$target")"
+# --- Package Installation ---
+install_packages() {
+    echo "---"
+    echo "Installing packages..."
+    
+    # Check for Arch Linux (pacman)
+    if command -v pacman &> /dev/null; then
+        echo "Detected Arch Linux."
+        
+        # Check for yay, otherwise use pacman
+        if command -v yay &> /dev/null;
+        then
+            echo "Using 'yay' to install packages."
+            yay -Syu --noconfirm "${PACKAGES[@]}"
+        else
+            echo "Using 'pacman' to install packages. You may be prompted for your password."
+            sudo pacman -Syu --noconfirm "${PACKAGES[@]}"
+        fi
+    # Add checks for other OSes here (e.g., Debian/Ubuntu, macOS)
+    # elif command -v apt-get &> /dev/null; then
+    #     echo "Detected Debian/Ubuntu."
+    #     sudo apt-get update && sudo apt-get install -y "${PACKAGES[@]}"
+    else
+        echo "WARNING: Could not detect package manager. Please install packages manually:"
+        echo "${PACKAGES[@]}"
     fi
-
-    # If the target already exists, back it up
-    if [ -e "$target" ] || [ -L "$target" ]; then
-        echo "-> Backing up existing $target to $BACKUP_DIR"
-        mv "$target" "$BACKUP_DIR/"
-    fi
-
-    echo "-> Linking $source to $target"
-    ln -s "$source" "$target"
-    echo "   ...done"
+    echo "Package installation complete."
 }
 
-# --- List of files to link ---
-# Format: link_file "source_in_repo" "destination_in_home"
+# --- Symlinking ---
+link_files() {
+    echo "---"
+    echo "Linking configuration files..."
+    
+    # Directory where this script is located
+    local DOTFILES_DIR
+    DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    local BACKUP_DIR=~/dotfiles_backup_$(date +%Y%m%d_%H%M%S)
 
-link_file "nvim" ".config/nvim"
-link_file ".zshrc" ".zshrc"
+    echo "Your existing dotfiles will be backed up to: $BACKUP_DIR"
+    mkdir -p "$BACKUP_DIR"
 
-# Add more files here in the future
-# link_file ".gitconfig" ".gitconfig"
-# link_file "kitty" ".config/kitty"
+    # Function to create a symlink, backing up the original if it exists
+    _link_single_file() {
+        local source="$DOTFILES_DIR/$1"
+        local target="$HOME/$2"
 
-echo ""
+        if [ ! -d "$(dirname "$target")" ]; then
+            echo "-> Creating directory $(dirname "$target")"
+            mkdir -p "$(dirname "$target")"
+        fi
+
+        if [ -e "$target" ] || [ -L "$target" ]; then
+            echo "-> Backing up existing $target to $BACKUP_DIR"
+            mv "$target" "$BACKUP_DIR/"
+        fi
+
+        echo "-> Linking $source to $target"
+        ln -s "$source" "$target"
+        echo "   ...done"
+    }
+
+    # --- List of files to link ---
+    _link_single_file "nvim" ".config/nvim"
+    _link_single_file ".zshrc" ".zshrc"
+    # Add more files here in the future
+    # _link_single_file ".gitconfig" ".gitconfig"
+
+    echo "File linking complete."
+}
+
+
+# --- Main Execution ---
+install_packages
+link_files
+
+echo "---"
 echo "✅ Dotfiles setup complete!"
+echo "You may need to restart your shell for all changes to take effect."
