@@ -8,6 +8,7 @@ PACKAGES=(
     "fzf"
     "zsh"
     "git"
+    "curl"
 )
 
 # --- Script Start ---
@@ -41,6 +42,28 @@ install_packages() {
         echo "${PACKAGES[@]}"
     fi
     echo "Package installation complete."
+}
+
+# --- Oh My Zsh Installation ---
+install_oh_my_zsh() {
+    echo "---"
+    echo "Installing Oh My Zsh..."
+    if [ ! -d "$HOME/.oh-my-zsh" ]; then
+        # The installer will try to run zsh at the end, which might fail if the script isn't running in a tty
+        # We use expect to handle this gracefully
+        if ! command -v expect &> /dev/null; then
+            echo "'expect' is not installed. Installing it now to handle the Oh My Zsh installation."
+            if command -v pacman &> /dev/null; then sudo pacman -S --noconfirm expect; 
+            elif command -v apt-get &> /dev/null; then sudo apt-get install -y expect; fi
+        fi
+        expect -c "
+        spawn sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh) --unattended\"
+        expect eof
+        " 
+    else
+        echo "Oh My Zsh is already installed."
+    fi
+    echo "Oh My Zsh installation complete."
 }
 
 # --- Symlinking ---
@@ -88,6 +111,7 @@ link_files() {
 
 # --- Main Execution ---
 install_packages
+install_oh_my_zsh
 link_files
 
 echo "---"
