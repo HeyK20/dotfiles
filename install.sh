@@ -4,18 +4,18 @@ set -e # Exit immediately if a command exits with a non-zero status.
 # --- Configuration ---
 # Add packages you want to install here
 PACKAGES=(
-    "neovim"
-    "fzf"
-    "zsh"
-    "git"
-    "curl"
-    "nodejs"
-    "kitty"
+  "neovim"
+  "fzf"
+  "zsh"
+  "git"
+  "curl"
+  "nodejs"
+  "kitty"
 )
 
 # OS-specific packages
 DEBIAN_PACKAGES=(
-    "libdbus-1-dev"
+  "libdbus-1-dev"
 )
 ARCH_PACKAGES=()
 
@@ -24,123 +24,122 @@ echo "Starting dotfiles setup..."
 
 # --- Package Installation ---
 install_packages() {
-    echo "---"
-    echo "Installing packages..."
-    
-    # Check for Arch Linux (pacman)
-    if command -v pacman &> /dev/null; then
-        echo "Detected Arch Linux."
-        local all_packages=("${PACKAGES[@]}" "${ARCH_PACKAGES[@]}")
-        # Check for yay, otherwise use pacman
-        if command -v yay &> /dev/null;
-        then
-            echo "Using 'yay' to install packages."
-            yay -Syu --noconfirm "${all_packages[@]}"
-        else
-            echo "Using 'pacman' to install packages. You may be prompted for your password."
-            sudo pacman -Syu --noconfirm "${all_packages[@]}"
-        fi
-    # Check for Debian/Ubuntu (apt-get)
-    elif command -v apt-get &> /dev/null; then
-        echo "Detected Debian/Ubuntu."
-        echo "You may be prompted for your password."
+  echo "---"
+  echo "Installing packages..."
 
-        # Ensure curl is installed for NodeSource script
-        if ! command -v curl &> /dev/null; then
-            echo "Installing curl, needed for Node.js setup."
-            sudo apt-get update
-            sudo apt-get install -y curl
-        fi
-
-        echo "Adding NodeSource repository for latest Node.js/npm..."
-        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-        
-        local all_packages=("${PACKAGES[@]}" "${DEBIAN_PACKAGES[@]}")
-        sudo apt-get update && sudo apt-get install -y "${all_packages[@]}"
+  # Check for Arch Linux (pacman)
+  if command -v pacman &>/dev/null; then
+    echo "Detected Arch Linux."
+    local all_packages=("${PACKAGES[@]}" "${ARCH_PACKAGES[@]}")
+    # Check for yay, otherwise use pacman
+    if command -v yay &>/dev/null; then
+      echo "Using 'yay' to install packages."
+      yay -Syu --noconfirm "${all_packages[@]}"
     else
-        echo "WARNING: Could not detect package manager. Please install packages manually:"
-        echo "${PACKAGES[@]}"
+      echo "Using 'pacman' to install packages. You may be prompted for your password."
+      sudo pacman -Syu --noconfirm "${all_packages[@]}"
     fi
-    echo "Package installation complete."
+  # Check for Debian/Ubuntu (apt-get)
+  elif command -v apt-get &>/dev/null; then
+    echo "Detected Debian/Ubuntu."
+    echo "You may be prompted for your password."
+
+    # Ensure curl is installed for NodeSource script
+    if ! command -v curl &>/dev/null; then
+      echo "Installing curl, needed for Node.js setup."
+      sudo apt-get update
+      sudo apt-get install -y curl
+    fi
+
+    echo "Adding NodeSource repository for latest Node.js/npm..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+
+    local all_packages=("${PACKAGES[@]}" "${DEBIAN_PACKAGES[@]}")
+    sudo apt-get update && sudo apt-get install -y "${all_packages[@]}"
+  else
+    echo "WARNING: Could not detect package manager. Please install packages manually:"
+    echo "${PACKAGES[@]}"
+  fi
+  echo "Package installation complete."
 }
 
 # --- Oh My Zsh Installation ---
 install_oh_my_zsh() {
-    echo "---"
-    echo "Installing Oh My Zsh..."
-    if [ ! -d "$HOME/.oh-my-zsh" ]; then
-        echo "Installing Oh My Zsh (unattended)..."
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    else
-        echo "Oh My Zsh is already installed."
-    fi
-    echo "Oh My Zsh installation complete."
+  echo "---"
+  echo "Installing Oh My Zsh..."
+  if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    echo "Installing Oh My Zsh (unattended)..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  else
+    echo "Oh My Zsh is already installed."
+  fi
+  echo "Oh My Zsh installation complete."
 }
 
 # --- Zsh Plugin Installation ---
 install_zsh_plugins() {
-    echo "---"
-    echo "Installing Zsh plugins..."
-    local ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
+  echo "---"
+  echo "Installing Zsh plugins..."
+  local ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
 
-    # zsh-autosuggestions
-    if [ ! -d "${ZSH_CUSTOM}/plugins/zsh-autosuggestions" ]; then
-        echo "-> Cloning zsh-autosuggestions..."
-        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
-    else
-        echo "-> zsh-autosuggestions already installed."
-    fi
-    echo "Zsh plugin installation complete."
+  # zsh-autosuggestions
+  if [ ! -d "${ZSH_CUSTOM}/plugins/zsh-autosuggestions" ]; then
+    echo "-> Cloning zsh-autosuggestions..."
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
+  else
+    echo "-> zsh-autosuggestions already installed."
+  fi
+  echo "Zsh plugin installation complete."
 }
 
 # --- Symlinking ---
 link_files() {
-    echo "---"
-    echo "Linking configuration files..."
-    
-    # Directory where this script is located
-    local DOTFILES_DIR
-    DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    local BACKUP_DIR=~/dotfiles_backup_$(date +%Y%m%d_%H%M%S)
+  echo "---"
+  echo "Linking configuration files..."
 
-    echo "Your existing dotfiles will be backed up to: $BACKUP_DIR"
-    mkdir -p "$BACKUP_DIR"
+  # Directory where this script is located
+  local DOTFILES_DIR
+  DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+  local BACKUP_DIR=~/dotfiles_backup_$(date +%Y%m%d_%H%M%S)
 
-    # Function to create a symlink, backing up the original if it exists
-    _link_single_file() {
-        local source="$DOTFILES_DIR/$1"
-        local target="$HOME/$2"
+  echo "Your existing dotfiles will be backed up to: $BACKUP_DIR"
+  mkdir -p "$BACKUP_DIR"
 
-        if [ ! -d "$(dirname "$target")" ]; then
-            echo "-> Creating directory $(dirname "$target")"
-            mkdir -p "$(dirname "$target")"
-        fi
+  # Function to create a symlink, backing up the original if it exists
+  _link_single_file() {
+    local source="$DOTFILES_DIR/$1"
+    local target="$HOME/$2"
 
-        if [ -e "$target" ] || [ -L "$target" ]; then
-            echo "-> Backing up existing $target to $BACKUP_DIR"
-            mv "$target" "$BACKUP_DIR/"
-            # Explicitly remove the target after backing up to ensure a clean slate for symlink
-            rm -rf "$target"
-        fi
+    if [ ! -d "$(dirname "$target")" ]; then
+      echo "-> Creating directory $(dirname "$target")"
+      mkdir -p "$(dirname "$target")"
+    fi
 
-        echo "-> Linking $source to $target"
-        ln -s "$source" "$target"
-        echo "   ...done"
-    }
+    if [ -e "$target" ] || [ -L "$target" ]; then
+      echo "-> Backing up existing $target to $BACKUP_DIR"
+      mv "$target" "$BACKUP_DIR/"
+      # Explicitly remove the target after backing up to ensure a clean slate for symlink
+      rm -rf "$target"
+    fi
 
-    # --- List of files to link ---
-    _link_single_file "nvim" ".config/nvim"
-    _link_single_file ".zshrc" ".zshrc"
-    _link_single_file "kitty" ".config/kitty"
+    echo "-> Linking $source to $target"
+    ln -s "$source" "$target"
+    echo "   ...done"
+  }
 
-    echo "File linking complete."
+  # --- List of files to link ---
+  _link_single_file "nvim" ".config/nvim"
+  _link_single_file ".zshrc" ".zshrc"
+  _link_single_file "kitty" ".config/kitty"
+
+  echo "File linking complete."
 }
-
 
 # --- Main Execution ---
 install_packages
 install_oh_my_zsh
 link_files
+install_zsh_plugins
 
 echo "---"
 echo "✅ Dotfiles setup complete!"
