@@ -56,6 +56,15 @@ install_packages() {
 
     local all_packages=("${PACKAGES[@]}" "${DEBIAN_PACKAGES[@]}")
     sudo apt-get update && sudo apt-get install -y "${all_packages[@]}"
+
+    echo "Installing latest fzf from GitHub..."
+    if [ ! -d "$HOME/.fzf" ]; then
+      git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+      "$HOME/.fzf/install" --all --no-bash --no-fish
+    else
+      echo "fzf directory already exists. Updating fzf..."
+      cd "$HOME/.fzf" && git pull && "$HOME/.fzf/install" --all --no-bash --no-fish
+    fi
   else
     echo "WARNING: Could not detect package manager. Please install packages manually:"
     echo "${PACKAGES[@]}"
