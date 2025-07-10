@@ -11,6 +11,7 @@ PACKAGES=(
     "curl"
     "nodejs"
     "npm"
+    "kitty"
 )
 
 # --- Script Start ---
@@ -104,8 +105,7 @@ link_files() {
     # --- List of files to link ---
     _link_single_file "nvim" ".config/nvim"
     _link_single_file ".zshrc" ".zshrc"
-    # Add more files here in the future
-    # _link_single_file ".gitconfig" ".gitconfig"
+    _link_single_file "kitty" ".config/kitty"
 
     echo "File linking complete."
 }
