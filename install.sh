@@ -77,6 +77,22 @@ install_oh_my_zsh() {
     echo "Oh My Zsh installation complete."
 }
 
+# --- Zsh Plugin Installation ---
+install_zsh_plugins() {
+    echo "---"
+    echo "Installing Zsh plugins..."
+    local ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
+
+    # zsh-autosuggestions
+    if [ ! -d "${ZSH_CUSTOM}/plugins/zsh-autosuggestions" ]; then
+        echo "-> Cloning zsh-autosuggestions..."
+        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
+    else
+        echo "-> zsh-autosuggestions already installed."
+    fi
+    echo "Zsh plugin installation complete."
+}
+
 # --- Symlinking ---
 link_files() {
     echo "---"

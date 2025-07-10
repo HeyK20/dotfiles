@@ -77,6 +77,8 @@ plugins=(
 )
 
 source $ZSH/oh-my-zsh.sh
+
+# FZF configuration
 source <(fzf --zsh)
 # User configuration
 
