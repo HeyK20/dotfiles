@@ -9,6 +9,8 @@ PACKAGES=(
     "zsh"
     "git"
     "curl"
+    "nodejs"
+    "npm"
 )
 
 # --- Script Start ---
