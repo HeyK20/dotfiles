@@ -31,10 +31,11 @@ install_packages() {
             echo "Using 'pacman' to install packages. You may be prompted for your password."
             sudo pacman -Syu --noconfirm "${PACKAGES[@]}"
         fi
-    # Add checks for other OSes here (e.g., Debian/Ubuntu, macOS)
-    # elif command -v apt-get &> /dev/null; then
-    #     echo "Detected Debian/Ubuntu."
-    #     sudo apt-get update && sudo apt-get install -y "${PACKAGES[@]}"
+    # Check for Debian/Ubuntu (apt-get)
+    elif command -v apt-get &> /dev/null; then
+        echo "Detected Debian/Ubuntu."
+        echo "You may be prompted for your password."
+        sudo apt-get update && sudo apt-get install -y "${PACKAGES[@]}"
     else
         echo "WARNING: Could not detect package manager. Please install packages manually:"
         echo "${PACKAGES[@]}"
